@@ -21,7 +21,7 @@ void ICACHE_FLASH_ATTR user_init() {
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_GPIO1);
   gpio_output_set(0, 0, (1 << pin), 0);
 
-  // setup timer (500ms, repeating)
+  // setup timer (300ms, repeating)
   os_timer_setfn(&some_timer, (os_timer_func_t *)some_timerfunc, NULL);
-  os_timer_arm(&some_timer, 500, 1);
+  os_timer_arm(&some_timer, 300, 1);
 }
