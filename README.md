@@ -1,9 +1,8 @@
 # golemlet
 
 ### How to Build
-`git clone https://github.com/cavedweller/golemlet.git`  
-
-`cd esq_mqtt; make`
-`make`
-connect your golemlet with the gpio0 pulled low
-`make flash`
+1. `git clone https://github.com/cavedweller/golemlet.git`  
+2. `cd esq_mqtt; make`
+3. `make`
+4. connect your golemlet with the gpio0 pulled low
+5. `make flash`
