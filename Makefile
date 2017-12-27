@@ -1,14 +1,20 @@
+ESP_LIB = /home/ben/workspace/esp-open-sdk/sdk/lib
 CC = xtensa-lx106-elf-gcc
-CFLAGS = -I. -mlongcalls
-LDLIBS = -L. -nostdlib -Wl,--start-group -lmain -lnet80211 -lwpa -llwip -lpp -lphy -lc -Wl,--end-group -lgcc
-LDFLAGS = -Teagle.app.v6.ld
-LIBS = esp_mqtt.a
+CFLAGS = -I. -mlongcalls -I./esp_mqtt/mqtt/include/ -I./esp_mqtt/include/ -Wpointer-arith -Wundef \
+	 -Wl,-EL -Wno-implicit-function-declaration -fno-inline-functions -nostdlib -ffunction-sections \
+	 -fdata-sections -fno-builtin-printf -DICACHE_FLASH -DUSE_OPENSDK
+LDLIBS = -L$(ESP_LIB) -g -O2 -Wl,--start-group -lc -lgcc -lphy -lpp -lnet80211 \
+	 -lwpa -lmain -llwip -lcrypto -lssl -ljson -ldriver \
+	 esp_mqtt/build/esp_mqtt.a -Wl,--end-group -P
+LDFLAGS = -Teagle.app.v6.ld -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static
 
 golemlet-0x00000.bin: golemlet
 	esptool.py elf2image $^
 
 golemlet: golemlet.o
-	$(CC) $(LDFLAGS) golemlet.o $(LIBS) $(LDLIBS) -o golemlet
+	$(CC) $(LDFLAGS) golemlet.o $(LDLIBS) -o golemlet
+#	$(CC) $(LDFLAGS) golemlet.o $(LIBS) $(LDLIBS) -o golemlet
+
 
 golemlet.o: golemlet.c
 	$(CC) $(CFLAGS) -c -o golemlet.o golemlet.c
