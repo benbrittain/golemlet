@@ -53,6 +53,52 @@ void ICACHE_FLASH_ATTR print_info()
 
 }
 
+static void ICACHE_FLASH_ATTR mqttDisconnectedCb(uint32_t *args)
+{
+  MQTT_Client* client = (MQTT_Client*)args;
+  INFO("MQTT: Disconnected\r\n");
+}
+
+static void ICACHE_FLASH_ATTR mqttPublishedCb(uint32_t *args)
+{
+  MQTT_Client* client = (MQTT_Client*)args;
+  INFO("MQTT: Published\r\n");
+}
+
+static void ICACHE_FLASH_ATTR mqttConnectedCb(uint32_t *args)
+{
+  MQTT_Client* client = (MQTT_Client*)args;
+  INFO("MQTT: Connected\r\n");
+  MQTT_Subscribe(client, "/mqtt/topic/0", 0);
+  MQTT_Publish(client, "/mqtt/topic/0", "hello0", 6, 0, 0);
+}
+
+static void ICACHE_FLASH_ATTR mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const char *data, uint32_t data_len)
+{
+  char *topicBuf = (char*)os_zalloc(topic_len + 1),
+        *dataBuf = (char*)os_zalloc(data_len + 1);
+
+  MQTT_Client* client = (MQTT_Client*)args;
+  os_memcpy(topicBuf, topic, topic_len);
+  topicBuf[topic_len] = 0;
+  os_memcpy(dataBuf, data, data_len);
+  dataBuf[data_len] = 0;
+  INFO("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
+  os_free(topicBuf);
+  os_free(dataBuf);
+}
+
+
+MQTT_Client mqttClient;
+static void ICACHE_FLASH_ATTR wifiConnectCb(uint8_t status)
+{
+  if (status == STATION_GOT_IP) {
+    MQTT_Connect(&mqttClient);
+  } else {
+    MQTT_Disconnect(&mqttClient);
+  }
+}
+
 
 static void ICACHE_FLASH_ATTR app_init(void)
 {
@@ -63,14 +109,15 @@ static void ICACHE_FLASH_ATTR app_init(void)
     INFO("Failed to initialize properly. Check MQTT version.\r\n");
     return;
   }
-  // MQTT_InitLWT(&mqttClient, "/lwt", "offline", 0, 0);
-  // MQTT_OnConnected(&mqttClient, mqttConnectedCb);
-  // MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
-  // MQTT_OnPublished(&mqttClient, mqttPublishedCb);
-  // MQTT_OnData(&mqttClient, mqttDataCb);
+  MQTT_InitLWT(&mqttClient, "/lwt", "offline", 0, 0);
+  MQTT_OnConnected(&mqttClient, mqttConnectedCb);
+  MQTT_OnDisconnected(&mqttClient, mqttDisconnectedCb);
+  MQTT_OnPublished(&mqttClient, mqttPublishedCb);
+  MQTT_OnData(&mqttClient, mqttDataCb);
 
-  // WIFI_Connect(STA_SSID, STA_PASS, wifiConnectCb);
+  WIFI_Connect(STA_SSID, STA_PASS, wifiConnectCb);
 }
+
 void user_init(void)
 {
   system_init_done_cb(app_init);
