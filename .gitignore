@@ -55,3 +55,5 @@ dkms.conf
 # python2 stuff
 virtualenv/
 env/
+
+user_config.h
